@@ -1,6 +1,5 @@
 import pygame
 import asyncio
-from glob import glob
 from os.path import join
 from random import randint, uniform
 
@@ -151,22 +150,22 @@ def collisions():
             AnimatedExplosion(explosion_frames, laser.rect.midtop, all_sprites)
             explosion_sound.play()
 
-def get_background(dt):
-    global background_index, background_timer
 
-    background_timer += dt
+# def get_video_frame():
+#     success, frame = video.read()
 
-    if background_timer >= 0.1:
-        background_timer = 0
-        background_index = (
-            background_index + 1
-        ) % len(background_frames)
+#     if not success:
+#         video.set(cv2.CAP_PROP_POS_FRAMES, 0)
+#         success, frame = video.read()
 
-    return pygame.transform.scale(
-        background_frames[background_index],
-        (WINDOW_WIDTH, WINDOW_HEIGHT)
-    )
+#     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+#     frame = cv2.resize(frame, (WINDOW_WIDTH, WINDOW_HEIGHT))
 
+#     return pygame.image.frombuffer(
+#         frame.tobytes(),
+#         (WINDOW_WIDTH, WINDOW_HEIGHT),
+#         "RGB"
+#     )
 
 def display_score():
     current_time = (pygame.time.get_ticks() - game_start_time) // 100
@@ -221,24 +220,21 @@ def display_start_screen():
 pygame.init()
 WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
 display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+background_surf = pygame.image.load(
+    join("galary", "images", "bg.png")
+).convert()
+
+background_surf = pygame.transform.scale(
+    background_surf,
+    (WINDOW_WIDTH, WINDOW_HEIGHT)
+)
 pygame.display.set_caption("Space Killer")
 running = True
 clock = pygame.time.Clock()
 game_started = False
 game_start_time = 0
 
-background_paths = sorted(
-    glob(join("galary", "images", "bg_frames", "*.jpg"))
-)
 
-background_frames = [
-    pygame.image.load(path).convert()
-    for path in background_paths
-    ]
-
-
-background_index = 0
-background_timer = 0
 
 # import
 star_surf = pygame.image.load(join('galary', 'images', 'star.png')).convert_alpha()
@@ -257,7 +253,7 @@ explosion_sound = pygame.mixer.Sound(join('galary', 'audio', 'explosion.mp3'))
 explosion_sound.set_volume(0.5)
 game_music = pygame.mixer.Sound(join('galary', 'audio', 'game_music.mp3'))
 game_music.set_volume(0.4)
-game_music.play(loops = -1)
+# game_music.play(loops = -1)
 damage_sound = pygame.mixer.Sound(join("galary", "audio", "damage.ogg"))
 damage_sound.set_volume(0.5)
 
@@ -291,21 +287,14 @@ async def main():
                 if event.key == pygame.K_SPACE and not game_started:
                     game_started = True
                     game_start_time = pygame.time.get_ticks()
+                    game_music.play(loops = -1)
 
             if event.type == meteor_event and game_started:
                 x ,y = randint(0, WINDOW_WIDTH), randint(-200, -100)
                 Meteor(meteor_surf, (x, y), (all_sprites, meteor_sprites))
 
-        #update
         
-        
-        
-
-
-
-
         # Draw the game
-        background_surf = get_background(dt)
         display_surface.blit(background_surf, (0, 0))
         if game_started:
             all_sprites.update(dt)
@@ -324,3 +313,4 @@ async def main():
 
 asyncio.run(main())
 pygame.quit()
+
