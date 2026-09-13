@@ -52,7 +52,7 @@ class Player(pygame.sprite.Sprite):
             Laser(laser_surf, self.rect.midtop, (all_sprites, laser_sprites))
             self.can_shoot = False
             self.laser_shoot_time = pygame.time.get_ticks()
-            laser_sound.play()
+            # laser_sound.play()
         
 
         self.laser_timer()
@@ -138,7 +138,7 @@ def collisions():
         player.health -= 1
         player.can_take_damage = False
         player.damage_time = pygame.time.get_ticks()
-        damage_sound.play()
+        # damage_sound.play()
         
         if player.health <= 0:
             running = False
@@ -247,15 +247,15 @@ button_font = pygame.font.SysFont("DejaVu Sans", 38, bold = True)
 heart_font = pygame.font.SysFont("DejaVu Sans", 50)
 explosion_frames = [pygame.image.load(join('galary', 'images', 'explosion', f'{i}.png')).convert_alpha() for i in range(21)]
 
-laser_sound = pygame.mixer.Sound(join('galary', 'audio', 'laser.mp3'))
-laser_sound.set_volume(0.5)
-explosion_sound = pygame.mixer.Sound(join('galary', 'audio', 'explosion.mp3'))
-explosion_sound.set_volume(0.5)
-game_music = pygame.mixer.Sound(join('galary', 'audio', 'game_music.mp3'))
-game_music.set_volume(0.4)
-# game_music.play(loops = -1)
-damage_sound = pygame.mixer.Sound(join("galary", "audio", "damage.ogg"))
-damage_sound.set_volume(0.5)
+# laser_sound = pygame.mixer.Sound(join('galary', 'audio', 'laser.mp3'))
+# laser_sound.set_volume(0.5)
+# explosion_sound = pygame.mixer.Sound(join('galary', 'audio', 'explosion.mp3'))
+# explosion_sound.set_volume(0.5)
+# game_music = pygame.mixer.Sound(join('galary', 'audio', 'game_music.mp3'))
+# game_music.set_volume(0.4)
+# # game_music.play(loops = -1)
+# damage_sound = pygame.mixer.Sound(join("galary", "audio", "damage.ogg"))
+# damage_sound.set_volume(0.5)
 
 
 # sprites
@@ -287,7 +287,7 @@ async def main():
                 if event.key == pygame.K_SPACE and not game_started:
                     game_started = True
                     game_start_time = pygame.time.get_ticks()
-                    game_music.play(loops = -1)
+                    # game_music.play(loops = -1)
 
             if event.type == meteor_event and game_started:
                 x ,y = randint(0, WINDOW_WIDTH), randint(-200, -100)
