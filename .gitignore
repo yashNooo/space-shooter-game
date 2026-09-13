@@ -1,0 +1,5 @@
+venv/
+__pycache__/
+*.pyc
+galary/images/bg.mp4
+galary/images/bg_fixed.mp4
