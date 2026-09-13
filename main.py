@@ -1,5 +1,6 @@
 import pygame
-import cv2
+import asyncio
+from glob import glob
 from os.path import join
 from random import randint, uniform
 
@@ -150,19 +151,22 @@ def collisions():
             AnimatedExplosion(explosion_frames, laser.rect.midtop, all_sprites)
             explosion_sound.play()
 
+def get_background(dt):
+    global background_index, background_timer
 
-def get_video_frame():
-    success, frame = video.read()
+    background_timer += dt
 
-    # loop chiaye 
-    if not success:
-        video.set(cv2.CAP_PROP_POS_FRAMES, 0)
-        success, frame = video.read()
+    if background_timer >= 0.1:
+        background_timer = 0
+        background_index = (
+            background_index + 1
+        ) % len(background_frames)
 
-    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    frame = cv2.resize(frame, (WINDOW_WIDTH, WINDOW_HEIGHT))
+    return pygame.transform.scale(
+        background_frames[background_index],
+        (WINDOW_WIDTH, WINDOW_HEIGHT)
+    )
 
-    return pygame.image.frombuffer(frame.tobytes(), (WINDOW_WIDTH, WINDOW_HEIGHT), "RGB")
 
 def display_score():
     current_time = (pygame.time.get_ticks() - game_start_time) // 100
@@ -216,13 +220,25 @@ def display_start_screen():
 #genral setup     
 pygame.init()
 WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
-video = cv2.VideoCapture(join('galary', 'images', 'bg.mp4'))
 display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("Space Killer")
 running = True
 clock = pygame.time.Clock()
 game_started = False
 game_start_time = 0
+
+background_paths = sorted(
+    glob(join("galary", "images", "bg_frames", "*.jpg"))
+)
+
+background_frames = [
+    pygame.image.load(path).convert()
+    for path in background_paths
+    ]
+
+
+background_index = 0
+background_timer = 0
 
 # import
 star_surf = pygame.image.load(join('galary', 'images', 'star.png')).convert_alpha()
@@ -260,49 +276,51 @@ player = Player(all_sprites)
 meteor_event = pygame.event.custom_type()
 pygame.time.set_timer(meteor_event, 500)
 
+async def main():
+    global running, game_started, game_start_time
+
+    while running:
+        dt = clock.tick(60) / 1000
+
+        #event loop
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE and not game_started:
+                    game_started = True
+                    game_start_time = pygame.time.get_ticks()
+
+            if event.type == meteor_event and game_started:
+                x ,y = randint(0, WINDOW_WIDTH), randint(-200, -100)
+                Meteor(meteor_surf, (x, y), (all_sprites, meteor_sprites))
+
+        #update
+        
+        
+        
 
 
-while running:
-    dt = clock.tick(60) / 1000
-
-    #event loop
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE and not game_started:
-                game_started = True
-                game_start_time = pygame.time.get_ticks()
-
-        if event.type == meteor_event and game_started:
-            x ,y = randint(0, WINDOW_WIDTH), randint(-200, -100)
-            Meteor(meteor_surf, (x, y), (all_sprites, meteor_sprites))
-
-    #update
-    
-    
-    
 
 
+        # Draw the game
+        background_surf = get_background(dt)
+        display_surface.blit(background_surf, (0, 0))
+        if game_started:
+            all_sprites.update(dt)
+            collisions()
+
+            display_score()
+            display_health()
+            all_sprites.draw(display_surface)
+
+        else:
+            display_start_screen()
 
 
-    # Draw the game
-    background_surf = get_video_frame()
-    display_surface.blit(background_surf, (0, 0))
-    if game_started:
-        all_sprites.update(dt)
-        collisions()
+        pygame.display.update()
+        await asyncio.sleep(0)
 
-        display_score()
-        display_health()
-        all_sprites.draw(display_surface)
-
-    else:
-        display_start_screen()
-
-
-    pygame.display.update()
-
-video.release()
+asyncio.run(main())
 pygame.quit()
