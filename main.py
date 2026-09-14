@@ -264,6 +264,7 @@ game_music.set_volume(0.4)
 # game_music.play(loops = -1)
 damage_sound = pygame.mixer.Sound(join("galary", "audio", "damage.ogg"))
 damage_sound.set_volume(0.5)
+sounds_started = False
 
 
 # sprites
@@ -281,7 +282,7 @@ meteor_event = pygame.event.custom_type()
 pygame.time.set_timer(meteor_event, 500)
 
 async def main():
-    global running, game_started, game_start_time
+    global running, game_started, game_start_time, sounds_started
 
     while running:
         dt = clock.tick(60) / 1000
@@ -295,7 +296,10 @@ async def main():
                 if event.key == pygame.K_SPACE and not game_started:
                     game_started = True
                     game_start_time = pygame.time.get_ticks()
+                    pygame.mixer.unpause()
+                    
                     game_music.play(loops = -1)
+                    # sounds_started = True
 
             if event.type == meteor_event and game_started:
                 x ,y = randint(0, WINDOW_WIDTH), randint(-200, -100)
