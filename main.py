@@ -1,4 +1,5 @@
 import asyncio
+import sys
 from os.path import join
 from random import randint, uniform
 import pygame
@@ -44,14 +45,42 @@ explosion_frames = [
     for i in range(21)
 ]
 
-laser_sound = pygame.mixer.Sound(join("galary", "audio", "laser.ogg"))
-laser_sound.set_volume(0.5)
-explosion_sound = pygame.mixer.Sound(join("galary", "audio", "explosion.ogg"))
-explosion_sound.set_volume(0.5)
-game_music = pygame.mixer.Sound(join("galary", "audio", "game_music.ogg"))
-game_music.set_volume(0.4)
-damage_sound = pygame.mixer.Sound(join("galary", "audio", "damage.ogg"))
-damage_sound.set_volume(0.5)
+# laser_sound = pygame.mixer.Sound(join("galary", "audio", "laser.ogg"))
+# laser_sound.set_volume(0.5)
+# explosion_sound = pygame.mixer.Sound(join("galary", "audio", "explosion.ogg"))
+# explosion_sound.set_volume(0.5)
+# game_music = pygame.mixer.Sound(join("galary", "audio", "game_music.ogg"))
+# game_music.set_volume(0.4)
+# damage_sound = pygame.mixer.Sound(join("galary", "audio", "damage.ogg"))
+# damage_sound.set_volume(0.5)
+
+
+WEB = sys.platform == "emscripten"
+
+class SilentSound:
+    def play(self, *args, **kwargs):
+        pass
+
+    def set_volume(self, *args, **kwargs):
+        pass
+
+
+if WEB:
+    laser_sound = SilentSound()
+    explosion_sound = SilentSound()
+    game_music = SilentSound()
+    damage_sound = SilentSound()
+
+else:
+    laser_sound = pygame.mixer.Sound(join("galary", "audio", "laser.mp3"))
+    explosion_sound = pygame.mixer.Sound(join("galary", "audio", "explosion.mp3"))
+    game_music = pygame.mixer.Sound(join("galary", "audio", "game_music.mp3"))
+    damage_sound = pygame.mixer.Sound(join("galary", "audio", "damage.ogg"))
+
+    laser_sound.set_volume(0.5)
+    explosion_sound.set_volume(0.5)
+    game_music.set_volume(0.4)
+    damage_sound.set_volume(0.5)
 
 
 class Player(pygame.sprite.Sprite):
