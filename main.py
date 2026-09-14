@@ -55,7 +55,7 @@ explosion_frames = [
 # damage_sound.set_volume(0.5)
 
 
-WEB = sys.platform == "emscripten"
+WEB = sys.platform == "emscripten" + SilentSound
 
 class SilentSound:
     def play(self, *args, **kwargs):
