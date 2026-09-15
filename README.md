@@ -7,7 +7,7 @@ Meteor storms are destroying Earth. Help the last dinosaurs escape through space
 ## Play Online
 PLAY LOCALLY ON YOUR PC FOR SOUND EFFECTS!!!
 
-playable link: [Click here to play the game](https://yashnooo.github.io/space-shooter-game/)
+playable link: [Click here to play the game](https://yashnooo.github.io/space-shooter-game/) / (press space if nothing is loading)
 
 video: [video of me playing (locally)](https://cdn.hackclub.com/01a0a047-42f9-720a-9c9d-e3a8c48a9529/Screencast%20From%202026-09-14%2019-45-31.mp4)
 
