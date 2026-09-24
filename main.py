@@ -14,6 +14,12 @@ class Player(pygame.sprite.Sprite):
         self.speed = 300
 
         self.health = 3
+        self.coins = 0
+
+        #fuel
+        self.fuel = 100
+        self.fuel_drain_speed = 2
+
         self.can_take_damage = True
         self.damage_time = 0
 
@@ -26,6 +32,23 @@ class Player(pygame.sprite.Sprite):
 
         #mask
         self.mask = pygame.mask.from_surface(self.image)
+
+
+        # shield
+        self.shield_active = False
+        self.shield_start_time = 0
+        self.shield_duration = 6000 
+
+    def activate_shield(self):
+        self.shield_active = True
+        self.shield_start_time = pygame.time.get_ticks()
+
+    def shield_timer(self):
+        if self.shield_active:
+            current_time = pygame.time.get_ticks()
+
+            if current_time - self.shield_start_time >= self.shield_duration:
+                self.shield_active = False
 
 
     def laser_timer(self):
@@ -49,12 +72,12 @@ class Player(pygame.sprite.Sprite):
         self.position += self.direction * self.speed * dt
         self.rect.center = round(self.position.x), round(self.position.y)
 
-        # recent_keys = pygame.key.get_just_pressed()
-        # if recent_keys[pygame.K_SPACE] and self.can_shoot:
-        #     Laser(laser_surf, self.rect.midtop, (all_sprites, laser_sprites))
-        #     self.can_shoot = False
-        #     self.laser_shoot_time = pygame.time.get_ticks()
-        #     laser_sound.play()
+        
+        self.fuel -= self.fuel_drain_speed * dt
+        self.fuel = max(0, self.fuel)
+
+
+
 
         if keys[pygame.K_SPACE] and self.can_shoot:
           Laser(laser_surf, self.rect.midtop, (all_sprites, laser_sprites))
@@ -65,6 +88,8 @@ class Player(pygame.sprite.Sprite):
 
         self.laser_timer()
         self.damage_timer()
+        self.shield_timer()
+
 
         
 class Star(pygame.sprite.Sprite):
@@ -119,6 +144,100 @@ class Meteor(pygame.sprite.Sprite):
 
         if pygame.time.get_ticks() - self.start_time >= self.lifetime:
             self.kill()
+ 
+class Coin(pygame.sprite.Sprite):
+    def __init__(self, surf, groups):
+        super().__init__(groups)
+
+        self.original_surf = pygame.transform.scale(surf, (40, 40))
+        self.image = self.original_surf
+
+        self.rect = self.image.get_rect(center = (randint(40, WINDOW_WIDTH - 40), -40))
+
+        self.position = pygame.Vector2(self.rect.center)
+        self.speed = randint(140, 220)
+
+        self.rotation = 0
+        self.rotation_speed = 150
+
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def update(self, dt):
+        self.position.y += self.speed * dt
+        
+        self.rotation += self.rotation_speed * dt
+        old_center = self.rect.center
+
+        self.image = pygame.transform.rotate(
+            self.original_surf,
+            self.rotation
+        )
+
+        self.rect = self.image.get_rect(center = old_center)
+        self.rect.center = round(self.position.x), round(self.position.y)
+        self.mask = pygame.mask.from_surface(self.image)
+
+        if self.rect.top > WINDOW_HEIGHT:
+            self.kill()
+
+
+class FuelPowerUp(pygame.sprite.Sprite):
+    def __init__(self, surf, groups):
+        super().__init__(groups)
+
+        self.image = pygame.transform.scale(surf, (50, 50))
+        self.rect = self.image.get_rect(center = (randint(50, WINDOW_WIDTH - 50), -50) )
+
+        self.position = pygame.Vector2(self.rect.center)
+        self.speed = 170
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def update(self, dt):
+        self.position.y += self.speed * dt
+        self.rect.center = round(self.position.x), round(self.position.y)
+
+        if self.rect.top > WINDOW_HEIGHT:
+            self.kill()
+
+
+
+
+
+class ShieldPowerUp(pygame.sprite.Sprite):
+    def __init__(self, surf, groups):
+        super().__init__(groups)
+
+        self.image = pygame.transform.scale(surf, (55, 55))
+        self.rect = self.image.get_rect(center = (randint(60, WINDOW_WIDTH - 60), -50))
+
+        self.position = pygame.Vector2(self.rect.center)
+        self.speed = 180
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def update(self,dt):
+        self.position.y += self.speed * dt
+        self.rect.center = round(self.position.x), round(self.position.y)
+
+        if self.rect.top > WINDOW_HEIGHT:
+            self.kill()
+
+class HealthPowerUp(pygame.sprite.Sprite):
+    def __init__(self, surf, groups):
+        super().__init__(groups)
+
+        self.image = surf
+        self.rect = self.image.get_rect(center = (randint(60, WINDOW_WIDTH - 60), -50))
+
+        self.position = pygame.Vector2(self.rect.center)
+        self.speed = 150
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def update(self, dt):
+        self.position.y += self.speed * dt
+        self.rect.center = round(self.position.x), round(self.position.y)
+
+        if self.rect.top > WINDOW_HEIGHT:
+            self.kill()
 
 class AnimatedExplosion(pygame.sprite.Sprite):
     def __init__(self, frames, pos, groups):
@@ -141,8 +260,30 @@ class AnimatedExplosion(pygame.sprite.Sprite):
 def collisions():
     global running
 
+    shield_collision = pygame.sprite.spritecollide(player, shield_sprites, True, pygame.sprite.collide_mask)
+
+    if shield_collision:
+        player.activate_shield()
+
+    health_collision = pygame.sprite.spritecollide(player, health_power_sprites, True, pygame.sprite.collide_mask)
+
+
+    if health_collision and player.health < 3:
+        player.health += 1
+
+    coin_collision = pygame.sprite.spritecollide(player, coin_sprites, True, pygame.sprite.collide_mask)
+    
+    if coin_collision:
+        player.coins += len(coin_collision)
+
+    fuel_collisions = pygame.sprite.spritecollide(player, fuel_sprites, True, pygame.sprite.collide_mask)
+
+    if fuel_collisions:
+        player.fuel = min(100, player.fuel + 25)
+
+
     collision_sprites = pygame.sprite.spritecollide(player, meteor_sprites, True, pygame.sprite.collide_mask)
-    if collision_sprites and player.can_take_damage:
+    if collision_sprites and player.can_take_damage and not player.shield_active:
         player.health -= 1
         player.can_take_damage = False
         player.damage_time = pygame.time.get_ticks()
@@ -159,21 +300,6 @@ def collisions():
             explosion_sound.play()
 
 
-# def get_video_frame():
-#     success, frame = video.read()
-
-#     if not success:
-#         video.set(cv2.CAP_PROP_POS_FRAMES, 0)
-#         success, frame = video.read()
-
-#     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-#     frame = cv2.resize(frame, (WINDOW_WIDTH, WINDOW_HEIGHT))
-
-#     return pygame.image.frombuffer(
-#         frame.tobytes(),
-#         (WINDOW_WIDTH, WINDOW_HEIGHT),
-#         "RGB"
-#     )
 
 def display_score():
     current_time = (pygame.time.get_ticks() - game_start_time) // 100
@@ -185,6 +311,57 @@ def display_score():
 def display_health():
     health_text = heart_font.render("♥ "* player.health, True, (255, 80, 100))
     display_surface.blit(health_text, (30, 25))
+
+
+def display_shield():
+    if player.shield_active:
+        shield_layer = pygame.Surface(
+            (WINDOW_WIDTH,WINDOW_HEIGHT),pygame.SRCALPHA
+        )
+
+        #outer glow
+        pygame.draw.circle(shield_layer, (40, 180, 255, 45), player.rect.center, 65)
+
+        #shield border
+        pygame.draw.circle(shield_layer, (80, 220, 255, 220), player.rect.center, 58, 4)
+
+        display_surface.blit(shield_layer, (0, 0))
+ 
+        elapsed_time = pygame.time.get_ticks() - player.shield_start_time
+        remaining_second = max(0, (player.shield_duration - elapsed_time + 999) // 1000 )
+
+        shield_text = story_font.render(f"SHIELD: {remaining_second}s", True, (80, 220, 255))
+
+        display_surface.blit(shield_text, (30, 85))
+
+def display_coins():
+    coin_icon = pygame.transform.scale(coin_surf, (35, 35))
+    display_surface.blit(coin_icon, (WINDOW_WIDTH - 140, 25))
+
+    coin_text = font.render(str(player.coins),True, (255, 220, 70))
+
+    display_surface.blit(coin_text, (WINDOW_WIDTH - 95, 22))
+
+
+def display_fuel():
+    fuel_percentage = int(player.fuel)
+
+    if fuel_percentage > 50:
+        fuel_color = (80, 255, 120)
+    elif fuel_percentage > 20:
+        fuel_color = (255, 210, 70)
+    else: 
+        fuel_color = (255, 70, 70)
+
+    fuel_text = story_font.render(
+        f"FUEL: {fuel_percentage}%", True, fuel_color
+    )
+
+    fuel_rect = fuel_text.get_rect(
+        midtop = (WINDOW_WIDTH / 2, 20)
+    )
+
+    display_surface.blit(fuel_text, fuel_rect)
 
 
 def display_start_screen():
@@ -230,7 +407,7 @@ WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
 display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 background_surf = pygame.image.load(
     join("galary", "images", "bg.png")
-).convert()
+).convert_alpha()
 
 background_surf = pygame.transform.scale(
     background_surf,
@@ -248,11 +425,18 @@ game_start_time = 0
 star_surf = pygame.image.load(join('galary', 'images', 'star.png')).convert_alpha()
 meteor_surf = pygame.image.load(join('galary', 'images/meteor.png')).convert_alpha()
 laser_surf = pygame.image.load(join('galary', 'images', 'laser.png')).convert_alpha()
+shield_surf = pygame.image.load(join('galary', 'images', 'shield.png')).convert_alpha()
+coin_surf = pygame.image.load(join('galary', 'images', 'coin.png')).convert_alpha()
+fuel_surf = pygame.image.load(join('galary', 'images', 'fuel.png')).convert_alpha()
+
 font = pygame.font.Font(None, 50)
 title_font = pygame.font.SysFont("DejaVu Sans", 82, bold = True)
 story_font = pygame.font.SysFont("DejaVu Sans", 32)
 button_font = pygame.font.SysFont("DejaVu Sans", 38, bold = True)
 heart_font = pygame.font.SysFont("DejaVu Sans", 50)
+
+heart_power_surf = pygame.font.SysFont("DejaVu Sans", 65).render("♥", True, (255, 70, 100))
+
 explosion_frames = [pygame.image.load(join('galary', 'images', 'explosion', f'{i}.png')).convert_alpha() for i in range(21)]
 
 laser_sound = pygame.mixer.Sound(join('galary', 'audio', 'laser.ogg'))
@@ -271,6 +455,10 @@ sounds_started = False
 all_sprites = pygame.sprite.Group()
 meteor_sprites = pygame.sprite.Group()
 laser_sprites = pygame.sprite.Group()
+shield_sprites = pygame.sprite.Group()
+health_power_sprites = pygame.sprite.Group()
+coin_sprites = pygame.sprite.Group()
+fuel_sprites = pygame.sprite.Group()
 
 # for i in range(20):
 #     Star(all_sprites, star_surf)
@@ -280,6 +468,11 @@ player = Player(all_sprites)
 #custom event -> meteor event
 meteor_event = pygame.event.custom_type()
 pygame.time.set_timer(meteor_event, 500)
+shield_event = pygame.event.custom_type()
+health_power_event = pygame.event.custom_type()
+coin_event = pygame.event.custom_type()
+fuel_event = pygame.event.custom_type()
+
 
 async def main():
     global running, game_started, game_start_time, sounds_started
@@ -300,21 +493,51 @@ async def main():
                     
                     game_music.play(loops = -1)
                     # sounds_started = True
+                    pygame.time.set_timer(shield_event, 10000)
+                    pygame.time.set_timer(health_power_event, 20000)
+
+                    pygame.time.set_timer(coin_event, 800)
+
+                    pygame.time.set_timer(fuel_event, 12000)
+
+            
+            if event.type == fuel_event and game_started:
+                FuelPowerUp(fuel_surf, (all_sprites, fuel_sprites))
+
+            
 
             if event.type == meteor_event and game_started:
                 x ,y = randint(0, WINDOW_WIDTH), randint(-200, -100)
                 Meteor(meteor_surf, (x, y), (all_sprites, meteor_sprites))
 
+            if event.type == shield_event and game_started:
+                ShieldPowerUp(shield_surf, (all_sprites, shield_sprites))
+
+            if event.type == health_power_event and game_started:
+                HealthPowerUp(heart_power_surf, (all_sprites, health_power_sprites))
+
+            if event.type == coin_event and game_started:
+                Coin(coin_surf, (all_sprites, coin_sprites))
+
         
         # Draw the game
         display_surface.blit(background_surf, (0, 0))
+
         if game_started:
             all_sprites.update(dt)
             collisions()
 
-            display_score()
-            display_health()
+            if player.fuel <=0:
+                running = False
+
+
             all_sprites.draw(display_surface)
+
+            display_score() 
+            display_health()
+            display_coins() 
+            display_fuel()
+            display_shield()
 
         else:
             display_start_screen()
@@ -325,4 +548,3 @@ async def main():
 
 asyncio.run(main())
 pygame.quit()
-
