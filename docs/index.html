@@ -165,7 +165,7 @@ async def custom_site():
         compose()
 
     # test/wait if user media interaction required
-    if False:
+    if not platform.window.MM.UME:
 
         # now make a prompt
         fnt = pygame.sysfont.SysFont("freesans",  uy(80) )
@@ -212,7 +212,14 @@ asyncio.run( custom_site() )
 # do not alter that comment block it is separating python code from html code
 # =============================================================================
 # --></script><head><!--
-
+//=============================================================================
+//
+//
+//
+//
+//
+//
+//
 
     {%- if cookiecutter.comment != "" -%}
 {{cookiecutter.comment}}
@@ -415,7 +422,8 @@ frameborder="1"
     <script type="application/javascript">
 
     async function custom_onload(debug_hidden) {
-        
+        // this is called before anything python is loaded
+        // make your js customization here
         console.log(__FILE__, "custom_onload")
 
         pyconsole.hidden = debug_hidden
@@ -447,7 +455,8 @@ frameborder="1"
     }
 
     function debug() {
-
+        // allow to gain access to dev tools from js console
+        // but only on desktop. difficult to reach when in iframe
         python.config.debug = true
         custom_onload(false)
         Module.PyRun_SimpleString("shell.uptime()")
@@ -459,6 +468,7 @@ frameborder="1"
     }
 
     function info_online(url) {
+        // display info about current APK
         fetch( url /*, options */)
             .then((response) => response.text())
             .then((html) => {
