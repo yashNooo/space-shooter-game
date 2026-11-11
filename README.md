@@ -2,7 +2,9 @@
 
 A 2D space survival shooter made with Python and Pygame.
 
-Meteor storms are destroying Earth. Help the last dinosaurs escape through space in their spaceship. Destroy meteors, collect resources, manage your fuel, and survive for as long as possible.
+Its a simple classic space shooter game that can run in browser and locally both, it includes a spaceship that you have to protect from metoers. 
+
+I also try to fit a little story in it: meteor shower distroyed the earth and only a single dinosour maintain to run in a space ship ( dinosaurs are hella smart) , now help the dino to escape the meteor shower!!!
 
 ## Play Online
 
@@ -21,21 +23,18 @@ Press **Space** if the game is waiting to start.
 
 ## Features
 
-- Spaceship movement in four directions
-- Laser shooting with a cooldown
-- Randomly falling and rotating meteors
-- Explosion animations and sound effects
-- Background music
-- Three-heart health system
-- Survival score counter
-- Randomly falling coins with a coin counter
-- Fuel system that continuously decreases
-- Fuel pickups restore 25% fuel
-- Shield power-up gives six seconds of protection
-- Health power-up restores one heart when health is below three
-- Game ends when health or fuel reaches zero
+- ship movement using arrow keys
+- Laser with spacebar
+- Metoers shower
+- Three heart health system
+- scoring point system base on time you survive
+- collectable coins
+- Fuel system
+- Power ups!!!! 
 
-## Power-Ups and Collectibles
+## Power-Ups and Coins
+- Falling coins that increase coin counter
+- Powers:
 
 ### Shield
 
@@ -48,10 +47,6 @@ A health power-up appears every 20 seconds. It restores one heart when the playe
 ### Fuel
 
 Fuel continuously decreases during the game. Fuel pickups appear every 12 seconds and restore 25% fuel, up to a maximum of 100%.
-
-### Coins
-
-Coins continuously fall from random positions. Collect them to increase the coin counter.
 
 ## Run Locally
 
